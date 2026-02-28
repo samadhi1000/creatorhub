@@ -6,8 +6,8 @@
 // ── STEP 1: Get these from https://supabase.com
 //   Dashboard → Your Project → Settings → API
 // ────────────────────────────────────────────────────────────
-const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co';
-const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY_HERE';
+const SUPABASE_URL = 'https://mpvdlqqqginbvryytvfd.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wdmRscXFxZ2luYnZyeXl0dmZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTIyNzcsImV4cCI6MjA4Nzg2ODI3N30.UiVjX6uV6N-H0KquO69L2LNz4cnJQ5Usq_COCdBaBik';
 
 // ── Storage bucket names (must match what you created) ──────
 const BUCKETS = {
