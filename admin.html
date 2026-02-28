@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CreatorHub — Admin Panel</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #08080f;
+            --bg2: #0e0e1c;
+            --bg3: #141428;
+            --primary: #7c3aed;
+            --primary-l: #a855f7;
+            --accent: #06b6d4;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --text: #f1f5f9;
+            --text2: #94a3b8;
+            --muted: #475569;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-h: rgba(124, 58, 237, 0.45);
+            --card: rgba(255, 255, 255, 0.04);
+            --card-h: rgba(255, 255, 255, 0.07);
+            --radius: 12px;
+            --radius-lg: 18px;
+            --t: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 99px;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        /* ── LOGIN ─────────────────────────────────── */
+        #login-screen {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(ellipse at 30% 30%, rgba(124, 58, 237, 0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 70%, rgba(6, 182, 212, 0.1) 0%, transparent 60%),
+                var(--bg);
+        }
+
+        .login-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7), 0 0 60px rgba(124, 58, 237, 0.15);
+        }
+
+        .login-logo {
+            text-align: center;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-l), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.3rem;
+        }
+
+        .login-sub {
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.85rem;
+            margin-bottom: 2rem;
+        }
+
+        /* ── LAYOUT ────────────────────────────────── */
+        #app {
+            display: none;
+            height: 100vh;
+            display: none;
+            flex-direction: row;
+        }
+
+        #app.active {
+            display: flex;
+        }
+
+        /* Sidebar */
+        #sidebar {
+            width: 240px;
+            flex-shrink: 0;
+            background: var(--bg2);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar-logo {
+            padding: 1.5rem 1.2rem;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-l), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-nav {
+            padding: 1rem 0;
+            flex: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.2rem;
+            color: var(--text2);
+            font-size: 0.88rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--t);
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--card-h);
+            color: var(--text);
+        }
+
+        .nav-item.active {
+            background: rgba(124, 58, 237, 0.12);
+            color: var(--primary-l);
+            border-left-color: var(--primary);
+        }
+
+        .nav-item .icon {
+            font-size: 1.1rem;
+        }
+
+        .sidebar-footer {
+            padding: 1rem 1.2rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .sidebar-footer a {
+            display: block;
+            text-align: center;
+            padding: 0.55rem;
+            border-radius: var(--radius);
+            background: rgba(124, 58, 237, 0.12);
+            color: var(--primary-l);
+            font-size: 0.82rem;
+            font-weight: 600;
+            transition: var(--t);
+        }
+
+        .sidebar-footer a:hover {
+            background: rgba(124, 58, 237, 0.22);
+        }
+
+        /* Main area */
+        #main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #topbar {
+            height: 60px;
+            flex-shrink: 0;
+            background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+        }
+
+        #topbar h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .topbar-actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        #logout-btn {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: #f87171;
+            padding: 0.4rem 0.9rem;
+            border-radius: var(--radius);
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: var(--t);
+        }
+
+        #logout-btn:hover {
+            background: rgba(239, 68, 68, 0.22);
+        }
+
+        #page-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        /* ── Panels ────────────────────────────────── */
+        .panel {
+            display: none;
+        }
+
+        .panel.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        /* ── Dashboard Stats ───────────────────────── */
+        .dash-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .dash-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.4rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            transition: var(--t);
+            cursor: pointer;
+        }
+
+        .dash-card:hover {
+            background: var(--card-h);
+            border-color: var(--border-h);
+            transform: translateY(-2px);
+        }
+
+        .dash-card .d-icon {
+            font-size: 2rem;
+        }
+
+        .dash-card .d-num {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-l), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .dash-card .d-label {
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        /* ── Section header ─────────────────────────── */
+        .panel-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .panel-toolbar h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        /* ── Buttons ────────────────────────────────── */
+        .btn {
+            padding: 0.55rem 1.2rem;
+            border-radius: var(--radius);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: var(--t);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn-primary-s {
+            background: linear-gradient(135deg, var(--primary), var(--primary-l));
+            color: #fff;
+            box-shadow: 0 2px 16px rgba(124, 58, 237, 0.35);
+        }
+
+        .btn-primary-s:hover {
+            opacity: 0.88;
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: #f87171;
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.22);
+        }
+
+        .btn-ghost {
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text2);
+        }
+
+        .btn-ghost:hover {
+            background: var(--card-h);
+            color: var(--text);
+            border-color: var(--border-h);
+        }
+
+        /* ── Form ───────────────────────────────────── */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-full {
+            grid-column: 1/-1;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .form-group label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text2);
+        }
+
+        .form-control {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.65rem 0.9rem;
+            border-radius: var(--radius);
+            font-size: 0.88rem;
+            font-family: inherit;
+            outline: none;
+            transition: var(--t);
+            width: 100%;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+        }
+
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-control-editor {
+            min-height: 200px;
+            overflow-y: auto;
+        }
+
+        /* File upload */
+        .file-drop {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-lg);
+            padding: 2rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--t);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .file-drop:hover,
+        .file-drop.dragover {
+            border-color: var(--primary);
+            background: rgba(124, 58, 237, 0.07);
+        }
+
+        .file-drop .fd-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .file-drop p {
+            color: var(--muted);
+            font-size: 0.82rem;
+        }
+
+        .file-drop strong {
+            color: var(--primary-l);
+        }
+
+        .file-drop input[type=file] {
+            display: none;
+        }
+
+        .file-preview {
+            margin-top: 0.75rem;
+        }
+
+        .file-preview img,
+        .file-preview audio,
+        .file-preview video {
+            max-width: 100%;
+            max-height: 160px;
+            border-radius: var(--radius);
+            margin-top: 0.5rem;
+        }
+
+        .file-name {
+            font-size: 0.78rem;
+            color: var(--accent);
+            margin-top: 0.3rem;
+        }
+
+        /* ── Content Table/Cards ───────────────────── */
+        .content-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .content-item {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.85rem 1rem;
+            transition: var(--t);
+        }
+
+        .content-item:hover {
+            background: var(--card-h);
+            border-color: var(--border-h);
+        }
+
+        .ci-thumb {
+            width: 50px;
+            height: 50px;
+            border-radius: var(--radius);
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .ci-thumb-ph {
+            width: 50px;
+            height: 50px;
+            border-radius: var(--radius);
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .ci-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .ci-info .name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .ci-info .sub {
+            color: var(--muted);
+            font-size: 0.76rem;
+            margin-top: 0.1rem;
+        }
+
+        .ci-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .ci-badge {
+            font-size: 0.7rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 99px;
+            font-weight: 600;
+            background: rgba(124, 58, 237, 0.14);
+            color: var(--primary-l);
+        }
+
+        /* ── Form card wrapper ──────────────────────── */
+        .form-card {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-card h4 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* ── Toast ──────────────────────────────────── */
+        #toast {
+            position: fixed;
+            top: 1.2rem;
+            right: 1.2rem;
+            z-index: 9999;
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0.8rem 1.2rem;
+            font-size: 0.88rem;
+            font-weight: 500;
+            box-shadow: var(--shadow);
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-10px);
+                opacity: 0
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1
+            }
+        }
+
+        #toast.show {
+            display: flex;
+        }
+
+        #toast.success {
+            border-color: rgba(16, 185, 129, 0.4);
+            color: var(--success);
+        }
+
+        #toast.error {
+            border-color: rgba(239, 68, 68, 0.4);
+            color: var(--danger);
+        }
+
+        /* ── Modal ──────────────────────────────────── */
+        .adm-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .adm-overlay.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .adm-modal {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 620px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+            transform: scale(0.94);
+            transition: transform 0.25s ease;
+        }
+
+        .adm-overlay.open .adm-modal {
+            transform: scale(1);
+        }
+
+        .adm-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.2rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .adm-modal-header h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .adm-modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-close-btn {
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text2);
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--t);
+        }
+
+        .modal-close-btn:hover {
+            color: var(--danger);
+        }
+
+        /* ── Misc ───────────────────────────────────── */
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid rgba(124, 58, 237, 0.2);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 2rem auto;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        .empty {
+            text-align: center;
+            padding: 3rem;
+            color: var(--muted);
+        }
+
+        .empty .e-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 1.5rem 0;
+        }
+
+        .tag-chip {
+            display: inline-block;
+            background: rgba(124, 58, 237, 0.14);
+            color: var(--primary-l);
+            padding: 0.15rem 0.6rem;
+            border-radius: 99px;
+            font-size: 0.72rem;
+            margin: 0.15rem;
+        }
+
+        /* Progress bar */
+        .progress-wrap {
+            display: none;
+            margin-top: 1rem;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 99px;
+            overflow: hidden;
+            margin-bottom: 0.3rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 99px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .progress-label {
+            font-size: 0.75rem;
+            color: var(--muted);
+            text-align: right;
+        }
+
+        @media(max-width:700px) {
+            #sidebar {
+                position: fixed;
+                left: -240px;
+                top: 0;
+                bottom: 0;
+                z-index: 100;
+                transition: var(--t);
+            }
+
+            #sidebar.open {
+                left: 0;
+            }
+
+            #topbar {
+                padding: 0 1rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ── TOAST ───────────────────────────────────────────── -->
+    <div id="toast"></div>
+
+    <!-- ── LOGIN ───────────────────────────────────────────── -->
+    <div id="login-screen">
+        <div class="login-card">
+            <div class="login-logo">🎵 CreatorHub</div>
+            <div class="login-sub">Admin Panel — CMS</div>
+            <div style="margin-bottom:1rem;">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input id="login-user" class="form-control" type="text" placeholder="admin" autocomplete="username">
+                </div>
+            </div>
+            <div style="margin-bottom:1rem;">
+                <div class="form-group">
+                    <label>Password</label>
+                    <input id="login-pass" class="form-control" type="password" placeholder="Enter password"
+                        autocomplete="current-password">
+                </div>
+            </div>
+            <div style="margin-bottom:1.5rem;">
+                <div class="form-group">
+                    <label>Supabase Service Role Key <span style="color:var(--accent);">*</span></label>
+                    <input id="login-svckey" class="form-control" type="password" placeholder="eyJhbGciOiJIUzI1NiIs..."
+                        autocomplete="off">
+                    <div style="font-size:0.72rem;color:var(--muted);margin-top:0.3rem;">Dashboard → Project → Settings
+                        → API → <strong>service_role</strong> key</div>
+                </div>
+            </div>
+            <button class="btn btn-primary-s" style="width:100%;justify-content:center;padding:0.75rem;"
+                id="login-btn">🔐 Login to Admin</button>
+            <div id="login-error"
+                style="color:var(--danger);font-size:0.82rem;text-align:center;margin-top:0.75rem;display:none;"></div>
+            <div style="text-align:center;color:var(--muted);font-size:0.76rem;margin-top:1rem;">Default: admin /
+                admin123</div>
+        </div>
+    </div>
+
+    <!-- ── APP ──────────────────────────────────────────────── -->
+    <div id="app">
+        <!-- Sidebar -->
+        <aside id="sidebar">
+            <div class="sidebar-logo">🎵 CreatorHub</div>
+            <nav class="sidebar-nav">
+                <div class="nav-item active" data-panel="dashboard"><span class="icon">📊</span> Dashboard</div>
+                <div class="nav-item" data-panel="songs"><span class="icon">🎵</span> Songs</div>
+                <div class="nav-item" data-panel="images"><span class="icon">🖼</span> Images</div>
+                <div class="nav-item" data-panel="videos"><span class="icon">🎬</span> Videos</div>
+                <div class="nav-item" data-panel="articles"><span class="icon">📰</span> Articles</div>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="index.html" target="_blank">🌐 View Website ↗</a>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <div id="main">
+            <div id="topbar">
+                <h2 id="topbar-title">Dashboard</h2>
+                <div class="topbar-actions">
+                    <span id="admin-name" style="font-size:0.82rem;color:var(--muted);">👤 Admin</span>
+                    <button id="logout-btn">Logout</button>
+                </div>
+            </div>
+            <div id="page-content">
+
+                <!-- ── DASHBOARD ──────────────────────────── -->
+                <div class="panel active" id="panel-dashboard">
+                    <div class="dash-grid" id="dash-stats">
+                        <div class="spinner"></div>
+                    </div>
+                    <div class="form-card">
+                        <h4>⚡ Quick Upload</h4>
+                        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+                            <button class="btn btn-primary-s" onclick="Admin.switchPanel('songs')">🎵 Add Song</button>
+                            <button class="btn btn-ghost" onclick="Admin.switchPanel('images')">🖼 Add Image</button>
+                            <button class="btn btn-ghost" onclick="Admin.switchPanel('videos')">🎬 Add Video</button>
+                            <button class="btn btn-ghost" onclick="Admin.switchPanel('articles')">📰 New
+                                Article</button>
+                        </div>
+                    </div>
+                    <div class="form-card" id="recent-activity">
+                        <h4>🕐 Recent Uploads</h4>
+                        <div id="recent-list">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── SONGS PANEL ────────────────────────── -->
+                <div class="panel" id="panel-songs">
+                    <div class="panel-toolbar">
+                        <h3>🎵 Songs</h3>
+                        <button class="btn btn-primary-s" id="add-song-btn">+ Add Song</button>
+                    </div>
+
+                    <!-- Add/Edit Form -->
+                    <div class="form-card" id="song-form-card" style="display:none;">
+                        <h4 id="song-form-title">🎵 Add New Song</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Song Title *</label>
+                                <input id="sf-title" class="form-control" placeholder="Enter song title">
+                            </div>
+                            <div class="form-group">
+                                <label>Artist Name</label>
+                                <input id="sf-artist" class="form-control" placeholder="Artist / band name">
+                            </div>
+                            <div class="form-group">
+                                <label>Genre</label>
+                                <input id="sf-genre" class="form-control" placeholder="e.g. Sinhala Pop, Electronic">
+                            </div>
+                            <div class="form-group">
+                                <label>Tags <span style="color:var(--muted)">(comma separated)</span></label>
+                                <input id="sf-tags" class="form-control" placeholder="love, sad, dance">
+                            </div>
+                            <div class="form-group">
+                                <label>MP3 File *</label>
+                                <div class="file-drop" id="mp3-drop">
+                                    <div class="fd-icon">🎵</div>
+                                    <p>Drag & drop or <strong>click to upload</strong></p>
+                                    <p style="font-size:0.72rem;margin-top:0.3rem;">MP3 / WAV / OGG</p>
+                                    <input type="file" id="sf-mp3" accept="audio/*">
+                                    <div class="file-preview" id="mp3-preview"></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Cover Art</label>
+                                <div class="file-drop" id="cover-drop">
+                                    <div class="fd-icon">🖼</div>
+                                    <p>Drag & drop or <strong>click to upload</strong></p>
+                                    <p style="font-size:0.72rem;margin-top:0.3rem;">JPG / PNG / WebP</p>
+                                    <input type="file" id="sf-cover" accept="image/*">
+                                    <div class="file-preview" id="cover-preview"></div>
+                                </div>
+                            </div>
+                            <div class="form-group form-full">
+                                <label>Lyrics</label>
+                                <textarea id="sf-lyrics" class="form-control"
+                                    placeholder="Paste song lyrics here... (supports Sinhala, English, Tamil, Hindi)"></textarea>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:0.75rem;margin-top:1.25rem;flex-wrap:wrap;">
+                            <button class="btn btn-primary-s" id="save-song-btn">💾 Save Song</button>
+                            <button class="btn btn-ghost" id="cancel-song-btn">Cancel</button>
+                        </div>
+                        <div class="progress-wrap" id="song-upload-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill"></div>
+                            </div>
+                            <div class="progress-label">0%</div>
+                        </div>
+                        <input type="hidden" id="sf-edit-id">
+                    </div>
+
+                    <div class="content-list" id="songs-list">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+
+                <!-- ── IMAGES PANEL ───────────────────────── -->
+                <div class="panel" id="panel-images">
+                    <div class="panel-toolbar">
+                        <h3>🖼 Images & PNG Files</h3>
+                        <button class="btn btn-primary-s" id="add-image-btn">+ Upload Image</button>
+                    </div>
+
+                    <div class="form-card" id="image-form-card" style="display:none;">
+                        <h4 id="image-form-title">🖼 Upload Image</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Title *</label>
+                                <input id="if-title" class="form-control" placeholder="Image title">
+                            </div>
+                            <div class="form-group">
+                                <label>Category</label>
+                                <input id="if-category" class="form-control"
+                                    placeholder="e.g. Artwork, Greeting Card, Meme">
+                            </div>
+                            <div class="form-group form-full">
+                                <label>Description</label>
+                                <textarea id="if-desc" class="form-control" style="min-height:70px;"
+                                    placeholder="Short description..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Tags</label>
+                                <input id="if-tags" class="form-control" placeholder="art, nature, digital">
+                            </div>
+                            <div class="form-group form-full">
+                                <label>Image File *</label>
+                                <div class="file-drop" id="img-drop">
+                                    <div class="fd-icon">📁</div>
+                                    <p>Drag & drop or <strong>click to upload</strong> — Supports multiple files</p>
+                                    <p style="font-size:0.72rem;margin-top:0.3rem;">PNG, JPG, WebP, GIF</p>
+                                    <input type="file" id="if-file" accept="image/*" multiple>
+                                    <div class="file-preview" id="img-preview"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:0.75rem;margin-top:1.25rem;flex-wrap:wrap;">
+                            <button class="btn btn-primary-s" id="save-image-btn">💾 Save Image(s)</button>
+                            <button class="btn btn-ghost" id="cancel-image-btn">Cancel</button>
+                        </div>
+                        <div class="progress-wrap" id="image-upload-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill"></div>
+                            </div>
+                            <div class="progress-label">0%</div>
+                        </div>
+                        <input type="hidden" id="if-edit-id">
+                    </div>
+
+                    <div class="content-list" id="images-list">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+
+                <!-- ── VIDEOS PANEL ───────────────────────── -->
+                <div class="panel" id="panel-videos">
+                    <div class="panel-toolbar">
+                        <h3>🎬 Videos</h3>
+                        <button class="btn btn-primary-s" id="add-video-btn">+ Upload Video</button>
+                    </div>
+
+                    <div class="form-card" id="video-form-card" style="display:none;">
+                        <h4 id="video-form-title">🎬 Upload Video</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Title *</label>
+                                <input id="vf-title" class="form-control" placeholder="Video title">
+                            </div>
+                            <div class="form-group">
+                                <label>Tags</label>
+                                <input id="vf-tags" class="form-control" placeholder="music, lyric, clip">
+                            </div>
+                            <div class="form-group form-full">
+                                <label>Description</label>
+                                <textarea id="vf-desc" class="form-control" style="min-height:70px;"
+                                    placeholder="Short description..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Video File *</label>
+                                <div class="file-drop" id="vid-drop">
+                                    <div class="fd-icon">🎬</div>
+                                    <p>Drag & drop or <strong>click to upload</strong></p>
+                                    <p style="font-size:0.72rem;margin-top:0.3rem;">MP4, WebM, MOV</p>
+                                    <input type="file" id="vf-file" accept="video/*">
+                                    <div class="file-preview" id="vid-preview"></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Thumbnail Image</label>
+                                <div class="file-drop" id="thumb-drop">
+                                    <div class="fd-icon">🖼</div>
+                                    <p>Drag & drop or <strong>click to upload</strong></p>
+                                    <input type="file" id="vf-thumb" accept="image/*">
+                                    <div class="file-preview" id="thumb-preview"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:0.75rem;margin-top:1.25rem;flex-wrap:wrap;">
+                            <button class="btn btn-primary-s" id="save-video-btn">💾 Save Video</button>
+                            <button class="btn btn-ghost" id="cancel-video-btn">Cancel</button>
+                        </div>
+                        <div class="progress-wrap" id="video-upload-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill"></div>
+                            </div>
+                            <div class="progress-label">0%</div>
+                        </div>
+                        <input type="hidden" id="vf-edit-id">
+                    </div>
+
+                    <div class="content-list" id="videos-list">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+
+                <!-- ── ARTICLES PANEL ─────────────────────── -->
+                <div class="panel" id="panel-articles">
+                    <div class="panel-toolbar">
+                        <h3>📰 Articles</h3>
+                        <button class="btn btn-primary-s" id="add-article-btn">+ New Article</button>
+                    </div>
+
+                    <div class="form-card" id="article-form-card" style="display:none;">
+                        <h4 id="article-form-title">📰 Write Article</h4>
+                        <div class="form-grid">
+                            <div class="form-group form-full">
+                                <label>Title *</label>
+                                <input id="af-title" class="form-control" placeholder="Article title">
+                            </div>
+                            <div class="form-group">
+                                <label>Tags</label>
+                                <input id="af-tags" class="form-control" placeholder="music, story, review">
+                            </div>
+                            <div class="form-group">
+                                <label>Cover Image</label>
+                                <div class="file-drop" id="artcover-drop" style="padding:1rem;">
+                                    <p style="font-size:0.8rem;"><strong>Click</strong> to upload cover image</p>
+                                    <input type="file" id="af-cover" accept="image/*">
+                                    <div class="file-preview" id="artcover-preview"></div>
+                                </div>
+                            </div>
+                            <div class="form-group form-full">
+                                <label>Content <span style="color:var(--muted);font-size:0.76rem;">(Rich Text — use
+                                        toolbar)</span></label>
+                                <div class="editor-toolbar"
+                                    style="display:flex;gap:0.4rem;flex-wrap:wrap;padding:0.5rem;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-bottom:none;border-radius:var(--radius) var(--radius) 0 0;">
+                                    <button type="button" onclick="execCmd('bold')" class="btn btn-ghost"
+                                        style="padding:0.3rem 0.6rem;font-size:0.8rem;"><b>B</b></button>
+                                    <button type="button" onclick="execCmd('italic')" class="btn btn-ghost"
+                                        style="padding:0.3rem 0.6rem;font-size:0.8rem;"><i>I</i></button>
+                                    <button type="button" onclick="execCmd('underline')" class="btn btn-ghost"
+                                        style="padding:0.3rem 0.6rem;font-size:0.8rem;"><u>U</u></button>
+                                    <button type="button" onclick="execCmd('formatBlock','h2')" class="btn btn-ghost"
+                                        style="padding:0.3rem 0.6rem;font-size:0.8rem;">H2</button>
+                                    <button type="button" onclick="execCmd('formatBlock','h3')" class="btn btn-ghost"
+                                        style="padding:0.3rem 0.6rem;font-size:0.8rem;">H3</button>
+                                    <button type="button" onclick="execCmd('insertUnorderedList')" class="btn btn-ghost"
+                                        style="padding:0.3rem 0.6rem;font-size:0.8rem;">• List</button>
+                                    <button type="button" onclick="execCmd('insertOrderedList')" class="btn btn-ghost"
+                                        style="padding:0.3rem 0.6rem;font-size:0.8rem;">1. List</button>
+                                    <button type="button" onclick="execCmd('createLink',prompt('URL:'))"
+                                        class="btn btn-ghost"
+                                        style="padding:0.3rem 0.6rem;font-size:0.8rem;">🔗</button>
+                                    <button type="button" onclick="execCmd('removeFormat')" class="btn btn-ghost"
+                                        style="padding:0.3rem 0.6rem;font-size:0.8rem;">Clear</button>
+                                </div>
+                                <div id="af-body" class="form-control form-control-editor" contenteditable="true"
+                                    style="border-radius:0 0 var(--radius) var(--radius);min-height:240px;"
+                                    data-placeholder="Start writing your article here..."></div>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:0.75rem;margin-top:1.25rem;flex-wrap:wrap;">
+                            <button class="btn btn-primary-s" id="save-article-btn">💾 Save Article</button>
+                            <button class="btn btn-ghost" id="cancel-article-btn">Cancel</button>
+                        </div>
+                        <input type="hidden" id="af-edit-id">
+                    </div>
+
+                    <div class="content-list" id="articles-list">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+
+            </div><!-- /page-content -->
+        </div><!-- /main -->
+    </div><!-- /app -->
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="db.js"></script>
+    <script src="admin.js"></script>
+</body>
+
+</html>
