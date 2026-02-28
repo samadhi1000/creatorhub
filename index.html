@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Creative portfolio showcase — songs, images, videos, and articles by the creator.">
+  <title>CreatorHub — Music · Art · Stories</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Page-level extras */
+    .section-songs  { background-image: url('music_bg.png'); background-size: cover; background-position: center; }
+    .section-gallery{ background-image: url('gallery_bg.png'); background-size: cover; background-position: center; }
+    .section-songs::before, .section-gallery::before {
+      content: ''; position: absolute; inset: 0;
+      background: rgba(8,8,15,0.72); pointer-events: none; z-index: 0;
+    }
+    .section-songs > *, .section-gallery > * { position: relative; z-index: 1; }
+
+    /* Category filter pills */
+    .filter-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .filter-pill {
+      background: var(--bg-card); border: 1px solid var(--glass-border);
+      color: var(--text-secondary); padding: 0.35rem 0.9rem; border-radius: 99px;
+      font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: var(--transition);
+    }
+    .filter-pill.active, .filter-pill:hover { background: rgba(124,58,237,0.15); border-color: var(--primary); color: var(--primary-light); }
+
+    /* Scrollable section inner (when content overflows) */
+    .section-inner { width: 100%; max-width: 1200px; margin: 0 auto; }
+    .snap-section.section-hero { justify-content: center; align-items: center; }
+
+    /* Genre badges inside hero */
+    .hero-genre-pills { display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: center; margin-top: 1.5rem; }
+    .genre-pill { background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--text-secondary); padding: 0.3rem 0.8rem; border-radius: 99px; font-size: 0.78rem; }
+  </style>
+</head>
+<body>
+
+<!-- ── Navigation ──────────────────────────────────── -->
+<nav id="navbar">
+  <a href="#hero" class="nav-logo">🎵 CreatorHub</a>
+  <ul class="nav-links">
+    <li><a href="#songs-section">🎵 Songs</a></li>
+    <li><a href="#gallery-section">🖼 Gallery</a></li>
+    <li><a href="#videos-section">🎬 Videos</a></li>
+    <li><a href="#articles-section">📰 Articles</a></li>
+  </ul>
+  <div class="nav-actions">
+    <button id="search-btn" title="Search">🔍 <span style="font-size:0.82rem;">Search</span></button>
+    <a href="admin.html" class="btn-admin">⚙ Admin</a>
+    <div id="hamburger" title="Menu">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+</nav>
+
+<!-- ── HERO ─────────────────────────────────────────── -->
+<section class="snap-section section-hero" id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+
+  <div class="hero-content">
+    <div class="hero-badge">✨ Creative Portfolio</div>
+    <h1 class="hero-title">
+      Music, Art &<br><span>Stories Unleashed</span>
+    </h1>
+    <p class="hero-subtitle">Discover original songs, stunning visuals, creative videos, and inspiring articles — all in one place.</p>
+    <div class="hero-actions">
+      <a href="#songs-section" class="btn-primary">🎵 Explore Music</a>
+      <a href="#gallery-section" class="btn-outline">🖼 View Gallery</a>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="number" id="stat-songs">0</div><div class="label">Songs</div></div>
+      <div class="hero-stat"><div class="number" id="stat-images">0</div><div class="label">Images</div></div>
+      <div class="hero-stat"><div class="number" id="stat-videos">0</div><div class="label">Videos</div></div>
+      <div class="hero-stat"><div class="number" id="stat-articles">0</div><div class="label">Articles</div></div>
+    </div>
+
+    <div class="hero-genre-pills">
+      <span class="genre-pill">🎶 Sinhala</span>
+      <span class="genre-pill">🎵 English</span>
+      <span class="genre-pill">🎤 Tamil</span>
+      <span class="genre-pill">🎼 Hindi</span>
+      <span class="genre-pill">🎸 Pop</span>
+      <span class="genre-pill">🥁 Electronic</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── SONGS ─────────────────────────────────────────── -->
+<section class="snap-section section-songs" id="songs-section">
+  <div class="section-inner container">
+    <div class="section-header">
+      <div class="section-label">🎵 Music</div>
+      <h2 class="section-title">Original <span>Songs</span></h2>
+      <p>Listen to original MP3 tracks, enjoy lyrics, and explore every genre.</p>
+    </div>
+    <div class="content-grid" id="songs-grid">
+      <div class="spinner"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── GALLERY ───────────────────────────────────────── -->
+<section class="snap-section section-gallery" id="gallery-section">
+  <div class="section-inner container">
+    <div class="section-header">
+      <div class="section-label">🖼 Gallery</div>
+      <h2 class="section-title">Creative <span>Gallery</span></h2>
+      <p>Original PNG artwork, digital designs, greeting cards, and more.</p>
+    </div>
+    <div class="content-grid content-grid-gallery" id="gallery-grid">
+      <div class="spinner"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── VIDEOS ────────────────────────────────────────── -->
+<section class="snap-section section-videos" id="videos-section">
+  <div class="section-inner container">
+    <div class="section-header">
+      <div class="section-label">🎬 Videos</div>
+      <h2 class="section-title">Video <span>Collection</span></h2>
+      <p>Song videos, lyric videos, creative clips, and more.</p>
+    </div>
+    <div class="content-grid content-grid-lg" id="videos-grid">
+      <div class="spinner"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── ARTICLES ──────────────────────────────────────── -->
+<section class="snap-section section-articles" id="articles-section">
+  <div class="section-inner container">
+    <div class="section-header">
+      <div class="section-label">📰 Articles</div>
+      <h2 class="section-title">Read My <span>Stories</span></h2>
+      <p>Blog posts, music stories, creative writing, and more.</p>
+    </div>
+    <div class="content-grid content-grid-lg" id="articles-grid">
+      <div class="spinner"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ────────────────────────────────────────── -->
+<footer class="section-footer snap-section">
+  <div class="footer-inner">
+    <div class="footer-logo">🎵 CreatorHub</div>
+    <div class="footer-tagline">Music · Art · Stories · Creativity</div>
+    <div class="footer-links">
+      <a href="#hero">Home</a>
+      <a href="#songs-section">Songs</a>
+      <a href="#gallery-section">Gallery</a>
+      <a href="#videos-section">Videos</a>
+      <a href="#articles-section">Articles</a>
+      <a href="admin.html">Admin Panel</a>
+    </div>
+    <div class="footer-copy">
+      &copy; 2026 CreatorHub. All rights reserved. | Built with ❤ and creativity.
+    </div>
+  </div>
+</footer>
+
+<!-- ================================================================ -->
+<!-- ── STICKY MUSIC PLAYER ────────────────────────────────────────── -->
+<div id="music-player">
+  <img class="player-cover" src="" alt="" style="display:none;">
+  <div class="player-cover-placeholder">🎵</div>
+  <div class="player-info">
+    <div class="player-title">Song Title</div>
+    <div class="player-artist">Artist Name</div>
+  </div>
+  <div class="player-timeline">
+    <span class="player-time" id="player-current">0:00</span>
+    <input type="range" class="player-progress" id="player-progress" min="0" max="100" value="0" step="0.1">
+    <span class="player-time" id="player-duration">0:00</span>
+  </div>
+  <div class="player-controls">
+    <button class="player-btn play-pause">▶</button>
+  </div>
+  <div class="player-volume">
+    <span style="font-size:1rem;">🔊</span>
+    <input type="range" class="volume-slider" id="player-volume" min="0" max="100" value="80">
+  </div>
+  <button class="player-lyrics-btn">📃 Lyrics</button>
+  <button class="player-close" title="Close">✕</button>
+</div>
+
+<!-- ================================================================ -->
+<!-- ── MODALS ─────────────────────────────────────────────────────── -->
+
+<!-- LYRICS MODAL -->
+<div class="modal-overlay" id="lyrics-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="lyrics-title">Song Title</div>
+        <div style="font-size:0.82rem;color:var(--text-muted);margin-top:0.2rem;" id="lyrics-artist"></div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('lyrics-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body">
+      <pre class="lyrics-content" id="lyrics-content"></pre>
+    </div>
+  </div>
+</div>
+
+<!-- VIDEO MODAL -->
+<div class="modal-overlay" id="video-modal">
+  <div class="modal" style="max-width:820px;">
+    <div class="modal-header">
+      <div class="modal-title" id="video-modal-title">Video</div>
+      <button class="modal-close" onclick="document.getElementById('video-modal').classList.remove('open');document.getElementById('video-modal-video').pause()">✕</button>
+    </div>
+    <div class="modal-body">
+      <video id="video-modal-video" controls style="width:100%;border-radius:12px;background:#000;max-height:65vh;"></video>
+      <p id="video-modal-desc" style="margin-top:1rem;font-size:0.9rem;color:var(--text-muted);"></p>
+    </div>
+  </div>
+</div>
+
+<!-- ARTICLE MODAL -->
+<div class="modal-overlay" id="article-modal">
+  <div class="modal" style="max-width:780px;">
+    <div class="modal-header">
+      <div>
+        <div class="article-modal-label" style="font-size:0.75rem;color:var(--accent);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.3rem;">Article</div>
+        <div class="modal-title" id="article-modal-title">Article Title</div>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.2rem;" id="article-modal-date"></div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('article-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body">
+      <img id="article-modal-cover" class="article-reader-cover" src="" alt="" style="display:none;">
+      <div class="article-reader-body" id="article-modal-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="modal-overlay" id="lightbox" style="background:rgba(0,0,0,0.95);flex-direction:column;gap:1rem;">
+  <button class="close-lb" style="position:absolute;top:1.5rem;right:1.5rem;background:rgba(255,255,255,0.1);border:none;color:#fff;width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:1.4rem;display:flex;align-items:center;justify-content:center;transition:var(--transition);">✕</button>
+  <img src="" alt="" style="max-width:90vw;max-height:80vh;object-fit:contain;border-radius:12px;">
+  <div class="lb-caption" style="color:var(--text-secondary);font-size:0.9rem;text-align:center;"></div>
+</div>
+
+<!-- ── SEARCH OVERLAY ─────────────────────────────────── -->
+<div id="search-overlay">
+  <div id="search-input-wrap">
+    <input type="text" id="search-input" placeholder="Search songs, images, videos, articles..." autocomplete="off">
+    <button id="search-close-btn">✕</button>
+  </div>
+  <div id="search-results"></div>
+</div>
+
+<!-- ── Scripts ───────────────────────────────────────── -->
+<script src="db.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
