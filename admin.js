@@ -354,20 +354,30 @@ const Admin = (() => {
 
     async function editSong(id) {
         try {
+            console.log(`[CMS] Editing song id=${id}`);
             // Use admin client to bypass any RLS issues when fetching for edit
             const { data, error } = await CMS.getAdminClient()
                 .from('songs').select('*').eq('id', id).single();
             if (error) throw error;
             if (data) showSongForm(data);
             else toast('Song not found', 'error');
-        } catch (e) { toast('Load error: ' + e.message, 'error'); }
+        } catch (e) {
+            console.error('[CMS] Edit Error:', e);
+            alert(`Edit failed:\n${e.message}`);
+            toast('Load error: ' + e.message, 'error');
+        }
     }
     async function deleteSong(id) {
         if (!confirm('Delete this song and its files from Supabase?')) return;
         try {
+            console.log(`[CMS] Deleting song id=${id}`);
             await CMS.Songs.delete(id);
             toast('Song deleted'); loadSongs(); loadDashboard();
-        } catch (e) { toast('Delete error: ' + e.message, 'error'); }
+        } catch (e) {
+            console.error('[CMS] Delete Error:', e);
+            alert(`Delete failed:\n${e.message}`);
+            toast('Delete error: ' + e.message, 'error');
+        }
     }
 
     // ─────────────────────────────────────────────────────
