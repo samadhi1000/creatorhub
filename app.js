@@ -148,9 +148,15 @@ const App = (() => {
 
         // Load & play
         audioEl.src = song.mp3;
-        audioEl.play().catch(() => { });
-        isPlaying = true;
-        updatePlayBtn();
+        audioEl.play().then(() => {
+            isPlaying = true;
+            updatePlayBtn();
+        }).catch((err) => {
+            console.error('[CMS] Audio play error:', err);
+            alert(`Playback failed: ${err.message}\nMake sure your browser allows audio playback and the file is a valid MP3.`);
+            isPlaying = false;
+            updatePlayBtn();
+        });
 
         player.classList.add('visible');
         trackProgress();
