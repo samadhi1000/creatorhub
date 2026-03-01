@@ -196,12 +196,8 @@ const NormArticles = {
 window.CMS = {
   getPublicClient, getAdminClient, resetAdminClient, getCounts,
   Songs, Images, Videos, Articles,
-  uploadFile, resetAdminClient,
+  uploadFile,
 
   // Public app (normalized field names)
-  NormSongs, NormImages, NormVideos, NormArticles,
-  searchAll: searchAllNorm,
-  getCounts,
-
-  getPublicClient, getAdminClient,
+  NormSongs, NormImages, NormVideos, NormArticles
 };
