@@ -352,11 +352,22 @@ const Admin = (() => {
       </div>`).join('');
     }
 
-    async function editSong(id) { const s = await CMS.Songs.get(id); if (s) showSongForm(s); }
+    async function editSong(id) {
+        try {
+            // Use admin client to bypass any RLS issues when fetching for edit
+            const { data, error } = await CMS.getAdminClient()
+                .from('songs').select('*').eq('id', id).single();
+            if (error) throw error;
+            if (data) showSongForm(data);
+            else toast('Song not found', 'error');
+        } catch (e) { toast('Load error: ' + e.message, 'error'); }
+    }
     async function deleteSong(id) {
         if (!confirm('Delete this song and its files from Supabase?')) return;
-        await CMS.Songs.delete(id);
-        toast('Song deleted'); loadSongs(); loadDashboard();
+        try {
+            await CMS.Songs.delete(id);
+            toast('Song deleted'); loadSongs(); loadDashboard();
+        } catch (e) { toast('Delete error: ' + e.message, 'error'); }
     }
 
     // ─────────────────────────────────────────────────────
@@ -462,10 +473,19 @@ const Admin = (() => {
       </div>`).join('');
     }
 
-    async function editImage(id) { const i = await CMS.Images.get(id); if (i) showImageForm(i); }
+    async function editImage(id) {
+        try {
+            const { data, error } = await CMS.getAdminClient()
+                .from('images').select('*').eq('id', id).single();
+            if (error) throw error;
+            if (data) showImageForm(data);
+        } catch (e) { toast('Load error: ' + e.message, 'error'); }
+    }
     async function deleteImage(id) {
         if (!confirm('Delete this image from Supabase?')) return;
-        await CMS.Images.delete(id); toast('Image deleted'); loadImages(); loadDashboard();
+        try {
+            await CMS.Images.delete(id); toast('Image deleted'); loadImages(); loadDashboard();
+        } catch (e) { toast('Delete error: ' + e.message, 'error'); }
     }
 
     // ─────────────────────────────────────────────────────
@@ -564,10 +584,19 @@ const Admin = (() => {
       </div>`).join('');
     }
 
-    async function editVideo(id) { const v = await CMS.Videos.get(id); if (v) showVideoForm(v); }
+    async function editVideo(id) {
+        try {
+            const { data, error } = await CMS.getAdminClient()
+                .from('videos').select('*').eq('id', id).single();
+            if (error) throw error;
+            if (data) showVideoForm(data);
+        } catch (e) { toast('Load error: ' + e.message, 'error'); }
+    }
     async function deleteVideo(id) {
         if (!confirm('Delete this video from Supabase?')) return;
-        await CMS.Videos.delete(id); toast('Video deleted'); loadVideos(); loadDashboard();
+        try {
+            await CMS.Videos.delete(id); toast('Video deleted'); loadVideos(); loadDashboard();
+        } catch (e) { toast('Delete error: ' + e.message, 'error'); }
     }
 
     // ─────────────────────────────────────────────────────
@@ -651,10 +680,19 @@ const Admin = (() => {
       </div>`).join('');
     }
 
-    async function editArticle(id) { const a = await CMS.Articles.get(id); if (a) showArticleForm(a); }
+    async function editArticle(id) {
+        try {
+            const { data, error } = await CMS.getAdminClient()
+                .from('articles').select('*').eq('id', id).single();
+            if (error) throw error;
+            if (data) showArticleForm(data);
+        } catch (e) { toast('Load error: ' + e.message, 'error'); }
+    }
     async function deleteArticle(id) {
         if (!confirm('Delete this article?')) return;
-        await CMS.Articles.delete(id); toast('Article deleted'); loadArticles(); loadDashboard();
+        try {
+            await CMS.Articles.delete(id); toast('Article deleted'); loadArticles(); loadDashboard();
+        } catch (e) { toast('Delete error: ' + e.message, 'error'); }
     }
 
     return {

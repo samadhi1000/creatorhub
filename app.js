@@ -638,5 +638,8 @@ const App = (() => {
     return { init, playSong, openLyrics, viewImage, playVideo, readArticle };
 })();
 
+// ── Make App globally accessible for inline onclick handlers ──
+window.App = App;
+
 // Boot
 document.addEventListener('DOMContentLoaded', App.init);
