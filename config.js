@@ -11,10 +11,10 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 // ── Storage bucket names (must match what you created) ──────
 const BUCKETS = {
-    songs: 'songs',    // MP3 audio files
-    images: 'images',   // PNG / JPG image files
-    videos: 'videos',   // Video files (MP4, WebM)
-    covers: 'covers',   // Cover art & thumbnails
+    songs: 'media',   // all files go into one bucket with subfolders
+    images: 'media',
+    videos: 'media',
+    covers: 'media',
 };
 
 // ── Export to window ─────────────────────────────────────────

@@ -99,10 +99,15 @@ async function dbSearch(table, field, query) {
 }
 
 // ── File upload helper ───────────────────────────────────────
-async function uploadFile(bucket, file, onProgress) {
+// bucketKey = the logical type key ('songs','images','videos','covers')
+// All go into the same 'media' bucket but in subfolders for organization
+async function uploadFile(bucketKey, file, onProgress) {
   const client = getAdminClient();
+  const bucket = 'media'; // single bucket — change in config.js if needed
   const ext = file.name.split('.').pop().toLowerCase();
-  const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const path = `${bucketKey}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+  console.log(`[CMS] Uploading to bucket="${bucket}" path="${path}"`);
 
   const { data, error } = await client.storage
     .from(bucket)
@@ -112,7 +117,10 @@ async function uploadFile(bucket, file, onProgress) {
       upsert: false,
     });
 
-  if (error) throw error;
+  if (error) {
+    console.error(`[CMS] Upload error for bucket="${bucket}":`, error);
+    throw new Error(`Upload failed (${bucket}/${path}): ${error.message}`);
+  }
 
   const { data: urlData } = client.storage
     .from(bucket)
