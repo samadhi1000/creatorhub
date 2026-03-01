@@ -1,20 +1,14 @@
 // ============================================================
-//  db.js — Supabase Data Layer for Creator CMS
-//  Public reads  → anon key (config.js)
-//  Admin writes  → service key (entered at admin login)
+//  db.js — Robust Supabase Data Layer
 // ============================================================
 
 let _publicClient = null;
 let _adminClient = null;
 
-// ── Client factories ─────────────────────────────────────────
+// ── Client Setup ─────────────────────────────────────────────
 function getPublicClient() {
-  if (!_publicClient) {
-    if (!window.IS_SUPABASE_CONFIGURED) return null;
-    _publicClient = supabase.createClient(
-      window.SUPABASE_URL,
-      window.SUPABASE_ANON_KEY
-    );
+  if (!_publicClient && window.IS_SUPABASE_CONFIGURED) {
+    _publicClient = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
   }
   return _publicClient;
 }
@@ -22,319 +16,185 @@ function getPublicClient() {
 function getAdminClient() {
   if (_adminClient) return _adminClient;
   const svcKey = sessionStorage.getItem('cms_service_key');
-  if (!svcKey) throw new Error('Admin not authenticated. Please log in with your service key.');
-  _adminClient = supabase.createClient(
-    window.SUPABASE_URL,
-    svcKey,
-    { auth: { persistSession: false } }
-  );
+  if (!svcKey) throw new Error('Not logged in as Admin');
+  _adminClient = supabase.createClient(window.SUPABASE_URL, svcKey, { auth: { persistSession: false } });
   return _adminClient;
 }
 
 function resetAdminClient() { _adminClient = null; }
 
-// ── Generic query helpers ────────────────────────────────────
-async function dbSelect(table, query = '*') {
-  const client = getPublicClient();
-  if (!client) return [];
-  const { data, error } = await client
-    .from(table)
-    .select(query)
-    .order('created_at', { ascending: false });
-  if (error) { console.error('DB select error:', error); return []; }
+// ── Generic DB Helpers ───────────────────────────────────────
+async function dbGetAll(table) {
+  const c = getPublicClient();
+  if (!c) return [];
+  const { data, error } = await c.from(table).select('*').order('created_at', { ascending: false });
+  if (error) { console.error(`[DB] Error fetching ${table}:`, error); return []; }
   return data || [];
 }
 
-async function dbSelectById(table, id) {
-  const client = getPublicClient();
-  if (!client) return null;
-  const { data, error } = await client
-    .from(table)
-    .select('*')
-    .eq('id', id)
-    .single();
-  if (error) { console.error('DB get error:', error); return null; }
+async function dbGetById(table, id) {
+  const c = getPublicClient();
+  if (!c) return null;
+  const { data, error } = await c.from(table).select('*').eq('id', Number(id)).single();
+  if (error) { console.error(`[DB] Error getting ${table} ${id}:`, error); return null; }
   return data;
 }
 
 async function dbInsert(table, row) {
-  const { data, error } = await getAdminClient()
-    .from(table)
-    .insert([row])
-    .select()
-    .single();
-  if (error) throw error;
+  const { data, error } = await getAdminClient().from(table).insert([row]).select().single();
+  if (error) { console.error(`[DB] Insert error on ${table}:`, error); throw error; }
   return data;
 }
 
 async function dbUpdate(table, id, row) {
-  const { data, error } = await getAdminClient()
-    .from(table)
-    .update(row)
-    .eq('id', id)
-    .select()
-    .single();
-  if (error) throw error;
+  const { data, error } = await getAdminClient().from(table).update(row).eq('id', Number(id)).select().single();
+  if (error) { console.error(`[DB] Update error on ${table} ${id}:`, error); throw error; }
   return data;
 }
 
 async function dbDelete(table, id) {
-  const { error } = await getAdminClient()
-    .from(table)
-    .delete()
-    .eq('id', id);
-  if (error) throw error;
+  const { error } = await getAdminClient().from(table).delete().eq('id', Number(id));
+  if (error) { console.error(`[DB] Delete error on ${table} ${id}:`, error); throw error; }
 }
 
-async function dbSearch(table, field, query) {
-  const client = getPublicClient();
-  if (!client) return [];
-  const { data, error } = await client
-    .from(table)
-    .select('*')
-    .or(field.map(f => `${f}.ilike.%${query}%`).join(','))
-    .order('created_at', { ascending: false });
-  if (error) return [];
-  return data || [];
-}
-
-// ── File upload helper ───────────────────────────────────────
-// bucketKey = the logical type key ('songs','images','videos','covers')
-// All go into the same 'media' bucket but in subfolders for organization
-async function uploadFile(bucketKey, file, onProgress) {
+// ── Storage Helpers ──────────────────────────────────────────
+async function uploadFile(folderName, file) {
+  if (!file) return null;
   const client = getAdminClient();
-  const bucket = 'media'; // single bucket — change in config.js if needed
+  const bucket = 'media';
   const ext = file.name.split('.').pop().toLowerCase();
-  const path = `${bucketKey}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const path = `${folderName}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-  console.log(`[CMS] Uploading to bucket="${bucket}" path="${path}"`);
+  console.log(`[DB] Uploading to ${bucket}/${path}`);
+  const { data, error } = await client.storage.from(bucket).upload(path, file, { contentType: file.type });
+  if (error) { console.error(`[DB] Upload error:`, error); throw error; }
 
-  const { data, error } = await client.storage
-    .from(bucket)
-    .upload(path, file, {
-      contentType: file.type,
-      cacheControl: '3600',
-      upsert: false,
-    });
-
-  if (error) {
-    console.error(`[CMS] Upload error for bucket="${bucket}":`, error);
-    throw new Error(`Upload failed (${bucket}/${path}): ${error.message}`);
-  }
-
-  const { data: urlData } = client.storage
-    .from(bucket)
-    .getPublicUrl(data.path);
-
+  const { data: urlData } = client.storage.from(bucket).getPublicUrl(data.path);
   return urlData.publicUrl;
 }
 
-// ── Delete file from storage ─────────────────────────────────
-async function deleteStorageFile(bucket, url) {
+async function deleteFileUrl(url) {
   if (!url) return;
   try {
+    const bucket = 'media';
     const path = url.split(`/${bucket}/`)[1];
     if (path) await getAdminClient().storage.from(bucket).remove([path]);
-  } catch (e) { /* ignore storage delete errors */ }
+  } catch (e) { console.error('[DB] Failed to delete storage file:', e); }
 }
 
-// ============================================================
-//  SONGS
-// ============================================================
+// ── API Definitions ──────────────────────────────────────────
 const Songs = {
-  getAll: () => dbSelect('songs'),
-  get: (id) => dbSelectById('songs', id),
-
-  add: async (data) => {
-    const { mp3File, coverFile, onProgress, ...meta } = data;
-    const row = { ...meta };
-    if (mp3File) row.mp3_url = await uploadFile(BUCKETS.songs, mp3File, onProgress);
-    if (coverFile) row.cover_url = await uploadFile(BUCKETS.covers, coverFile, onProgress);
+  getAll: () => dbGetAll('songs'),
+  get: (id) => dbGetById('songs', id),
+  add: async (d) => {
+    let row = { title: d.title, artist: d.artist, genre: d.genre, lyrics: d.lyrics };
+    if (d.mp3File) row.mp3_url = await uploadFile('songs', d.mp3File);
+    if (d.coverFile) row.cover_url = await uploadFile('covers', d.coverFile);
     return dbInsert('songs', row);
   },
-
-  update: async (id, data) => {
-    const { mp3File, coverFile, onProgress, ...meta } = data;
-    const row = { ...meta };
-    if (mp3File) row.mp3_url = await uploadFile(BUCKETS.songs, mp3File);
-    if (coverFile) row.cover_url = await uploadFile(BUCKETS.covers, coverFile);
+  update: async (id, d) => {
+    let row = { title: d.title, artist: d.artist, genre: d.genre, lyrics: d.lyrics };
+    if (d.mp3File) row.mp3_url = await uploadFile('songs', d.mp3File);
+    if (d.coverFile) row.cover_url = await uploadFile('covers', d.coverFile);
     return dbUpdate('songs', id, row);
   },
-
   delete: async (id) => {
-    const song = await dbSelectById('songs', id);
+    const s = await dbGetById('songs', id);
     await dbDelete('songs', id);
-    if (song) {
-      await deleteStorageFile(BUCKETS.songs, song.mp3_url);
-      await deleteStorageFile(BUCKETS.covers, song.cover_url);
-    }
-  },
-
-  search: (q) => dbSearch('songs', ['title', 'artist', 'genre', 'lyrics'], q),
+    if (s) { await deleteFileUrl(s.mp3_url); await deleteFileUrl(s.cover_url); }
+  }
 };
 
-// ============================================================
-//  IMAGES
-// ============================================================
 const Images = {
-  getAll: () => dbSelect('images'),
-  get: (id) => dbSelectById('images', id),
-
-  add: async (data) => {
-    const { imageFile, onProgress, ...meta } = data;
-    const row = { ...meta };
-    if (imageFile) row.file_url = await uploadFile(BUCKETS.images, imageFile, onProgress);
+  getAll: () => dbGetAll('images'),
+  get: (id) => dbGetById('images', id),
+  add: async (d) => {
+    let row = { title: d.title, category: d.category, description: d.description };
+    if (d.imageFile) row.file_url = await uploadFile('images', d.imageFile);
     return dbInsert('images', row);
   },
-
-  update: async (id, data) => {
-    const { imageFile, ...meta } = data;
-    const row = { ...meta };
-    if (imageFile) row.file_url = await uploadFile(BUCKETS.images, imageFile);
+  update: async (id, d) => {
+    let row = { title: d.title, category: d.category, description: d.description };
+    if (d.imageFile) row.file_url = await uploadFile('images', d.imageFile);
     return dbUpdate('images', id, row);
   },
-
   delete: async (id) => {
-    const img = await dbSelectById('images', id);
+    const i = await dbGetById('images', id);
     await dbDelete('images', id);
-    if (img) await deleteStorageFile(BUCKETS.images, img.file_url);
-  },
-
-  search: (q) => dbSearch('images', ['title', 'category', 'description'], q),
+    if (i) await deleteFileUrl(i.file_url);
+  }
 };
 
-// ============================================================
-//  VIDEOS
-// ============================================================
 const Videos = {
-  getAll: () => dbSelect('videos'),
-  get: (id) => dbSelectById('videos', id),
-
-  add: async (data) => {
-    const { videoFile, thumbFile, onProgress, ...meta } = data;
-    const row = { ...meta };
-    if (videoFile) row.file_url = await uploadFile(BUCKETS.videos, videoFile, onProgress);
-    if (thumbFile) row.thumbnail_url = await uploadFile(BUCKETS.covers, thumbFile);
+  getAll: () => dbGetAll('videos'),
+  get: (id) => dbGetById('videos', id),
+  add: async (d) => {
+    let row = { title: d.title, description: d.description };
+    if (d.videoFile) row.file_url = await uploadFile('videos', d.videoFile);
+    if (d.thumbFile) row.thumbnail_url = await uploadFile('covers', d.thumbFile);
     return dbInsert('videos', row);
   },
-
-  update: async (id, data) => {
-    const { videoFile, thumbFile, ...meta } = data;
-    const row = { ...meta };
-    if (videoFile) row.file_url = await uploadFile(BUCKETS.videos, videoFile);
-    if (thumbFile) row.thumbnail_url = await uploadFile(BUCKETS.covers, thumbFile);
+  update: async (id, d) => {
+    let row = { title: d.title, description: d.description };
+    if (d.videoFile) row.file_url = await uploadFile('videos', d.videoFile);
+    if (d.thumbFile) row.thumbnail_url = await uploadFile('covers', d.thumbFile);
     return dbUpdate('videos', id, row);
   },
-
   delete: async (id) => {
-    const vid = await dbSelectById('videos', id);
+    const v = await dbGetById('videos', id);
     await dbDelete('videos', id);
-    if (vid) {
-      await deleteStorageFile(BUCKETS.videos, vid.file_url);
-      await deleteStorageFile(BUCKETS.covers, vid.thumbnail_url);
-    }
-  },
-
-  search: (q) => dbSearch('videos', ['title', 'description'], q),
+    if (v) { await deleteFileUrl(v.file_url); await deleteFileUrl(v.thumbnail_url); }
+  }
 };
 
-// ============================================================
-//  ARTICLES
-// ============================================================
 const Articles = {
-  getAll: () => dbSelect('articles'),
-  get: (id) => dbSelectById('articles', id),
-
-  add: async (data) => {
-    const { coverFile, onProgress, ...meta } = data;
-    const row = { ...meta };
-    if (coverFile) row.cover_url = await uploadFile(BUCKETS.covers, coverFile, onProgress);
+  getAll: () => dbGetAll('articles'),
+  get: (id) => dbGetById('articles', id),
+  add: async (d) => {
+    let row = { title: d.title, body: d.body, tags: d.tags };
+    if (d.coverFile) row.cover_url = await uploadFile('covers', d.coverFile);
     return dbInsert('articles', row);
   },
-
-  update: async (id, data) => {
-    const { coverFile, ...meta } = data;
-    const row = { ...meta };
-    if (coverFile) row.cover_url = await uploadFile(BUCKETS.covers, coverFile);
+  update: async (id, d) => {
+    let row = { title: d.title, body: d.body, tags: d.tags };
+    if (d.coverFile) row.cover_url = await uploadFile('covers', d.coverFile);
     return dbUpdate('articles', id, row);
   },
-
   delete: async (id) => {
-    const art = await dbSelectById('articles', id);
+    const a = await dbGetById('articles', id);
     await dbDelete('articles', id);
-    if (art) await deleteStorageFile(BUCKETS.covers, art.cover_url);
-  },
-
-  search: (q) => dbSearch('articles', ['title', 'body', 'tags'], q),
+    if (a) await deleteFileUrl(a.cover_url);
+  }
 };
 
-// ============================================================
-//  CROSS-CONTENT SEARCH
-// ============================================================
-async function searchAll(query) {
-  const [songs, images, videos, articles] = await Promise.all([
-    Songs.search(query),
-    Images.search(query),
-    Videos.search(query),
-    Articles.search(query),
-  ]);
-  return {
-    songs: songs.map(s => ({ ...s, _type: 'song' })),
-    images: images.map(i => ({ ...i, _type: 'image' })),
-    videos: videos.map(v => ({ ...v, _type: 'video' })),
-    articles: articles.map(a => ({ ...a, _type: 'article' })),
-  };
-}
-
-// ============================================================
-//  COUNTS
-// ============================================================
 async function getCounts() {
-  const client = getPublicClient();
-  if (!client) return { songs: 0, images: 0, videos: 0, articles: 0 };
-
-  const counts = await Promise.all(
-    ['songs', 'images', 'videos', 'articles'].map(async (t) => {
-      const { count } = await client
-        .from(t)
-        .select('id', { count: 'exact', head: true });
-      return count || 0;
-    })
-  );
-  return {
-    songs: counts[0],
-    images: counts[1],
-    videos: counts[2],
-    articles: counts[3],
-  };
+  const c = getPublicClient();
+  if (!c) return { songs: 0, images: 0, videos: 0, articles: 0 };
+  const getC = async (t) => { const { count } = await c.from(t).select('*', { count: 'exact', head: true }); return count || 0; };
+  const [s, i, v, a] = await Promise.all([getC('songs'), getC('images'), getC('videos'), getC('articles')]);
+  return { songs: s, images: i, videos: v, articles: a };
 }
 
-// ── Map DB field names → app field names for public site ─────
-// DB uses mp3_url / file_url / cover_url — app.js uses mp3 / file / cover
-function normalizeSong(s) { return s ? { ...s, mp3: s.mp3_url, cover: s.cover_url } : null; }
-function normalizeImage(i) { return i ? { ...i, file: i.file_url } : null; }
-function normalizeVideo(v) { return v ? { ...v, file: v.file_url, thumbnail: v.thumbnail_url } : null; }
-function normalizeArticle(a) { return a ? { ...a, cover: a.cover_url } : null; }
+// ── App normalizers (translates DB cols to standard UI props) ──
+const NormSongs = {
+  getAll: async () => (await Songs.getAll()).map(s => ({ ...s, mp3: s.mp3_url, cover: s.cover_url })),
+  get: async (id) => { const s = await Songs.get(id); return s ? { ...s, mp3: s.mp3_url, cover: s.cover_url } : null; }
+};
+const NormImages = {
+  getAll: async () => (await Images.getAll()).map(i => ({ ...i, file: i.file_url })),
+  get: async (id) => { const i = await Images.get(id); return i ? { ...i, file: i.file_url } : null; }
+};
+const NormVideos = {
+  getAll: async () => (await Videos.getAll()).map(v => ({ ...v, file: v.file_url, thumbnail: v.thumbnail_url })),
+  get: async (id) => { const v = await Videos.get(id); return v ? { ...v, file: v.file_url, thumbnail: v.thumbnail_url } : null; }
+};
+const NormArticles = {
+  getAll: async () => (await Articles.getAll()).map(a => ({ ...a, cover: a.cover_url })),
+  get: async (id) => { const a = await Articles.get(id); return a ? { ...a, cover: a.cover_url } : null; }
+};
 
-// ── Normalized wrappers for app.js ───────────────────────────
-const NormSongs = { getAll: async () => (await Songs.getAll()).map(normalizeSong), get: async (id) => normalizeSong(await Songs.get(id)) };
-const NormImages = { getAll: async () => (await Images.getAll()).map(normalizeImage), get: async (id) => normalizeImage(await Images.get(id)) };
-const NormVideos = { getAll: async () => (await Videos.getAll()).map(normalizeVideo), get: async (id) => normalizeVideo(await Videos.get(id)) };
-const NormArticles = { getAll: async () => (await Articles.getAll()).map(normalizeArticle), get: async (id) => normalizeArticle(await Articles.get(id)) };
-
-async function searchAllNorm(query) {
-  const r = await searchAll(query);
-  return {
-    songs: r.songs.map(normalizeSong),
-    images: r.images.map(normalizeImage),
-    videos: r.videos.map(normalizeVideo),
-    articles: r.articles.map(normalizeArticle),
-  };
-}
-
-// ── Export ────────────────────────────────────────────────────
 window.CMS = {
-  // Admin (raw, DB field names)
+  getPublicClient, getAdminClient, resetAdminClient, getCounts,
   Songs, Images, Videos, Articles,
   uploadFile, resetAdminClient,
 
